@@ -11,14 +11,22 @@ from api.routes import auth
 from api.config import REDIS_URL
 from api.exceptions import ErrorResponse
 import logging
+from redis import Redis
+
+app = FastAPI()
+
+# Configurar a URL do Redis a partir das variáveis de ambiente
+REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+redis = Redis.from_url(REDIS_URL, decode_responses=True)
+
+@app.on_event("startup")
+async def startup():
+    await FastAPILimiter.init(redis)
 
 # Configuração de logs detalhados
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 logger.info("Iniciando a API...")
-
-
-app = FastAPI()
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
