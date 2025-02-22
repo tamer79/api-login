@@ -33,11 +33,13 @@ app.add_middleware(
 # Inicializa o Redis e o Rate Limiter
 @app.on_event("startup")
 async def startup():
-    """Inicializa a conexão com o Redis e configura o Rate Limiter."""
+    """Inicializa a conexão com o Redis e configura o Rate Limiter, apenas uma vez."""
     global redis_client
-    redis_client = redis.Redis.from_url(REDIS_URL, decode_responses=True)  # Usando Redis corretamente
-    await FastAPILimiter.init(redis_client)  # Inicializa o FastAPILimiter com Redis assíncrono
-    logger.info("Redis e Rate Limiter inicializados.")
+    if not hasattr(app.state, "redis_initialized"):  # Verifica se já foi inicializado
+        redis_client = redis.Redis.from_url(REDIS_URL, decode_responses=True)
+        await FastAPILimiter.init(redis_client)
+        app.state.redis_initialized = True  # Marca como inicializado
+        logger.info("Redis e Rate Limiter inicializados.")
 
 @app.on_event("shutdown")
 async def shutdown():
