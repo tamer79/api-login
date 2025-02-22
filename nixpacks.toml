@@ -1,5 +1,9 @@
+[variables]
+FORCE_REINSTALL = "true"
+
 [build]
 packages = ["openssl", "gcc", "python311", "libffi"]
+start = "pip install --no-cache-dir -r requirements.txt && gunicorn -w 4 -k uvicorn.workers.UvicornWorker api.main:app"
 
 [install]
 commands = [
