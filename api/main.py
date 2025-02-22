@@ -1,7 +1,7 @@
 import os
 import sys
 import logging
-import redis.asyncio as redis
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_limiter import FastAPILimiter
@@ -9,10 +9,8 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.responses import JSONResponse
 from api.routes import auth
 from api.config import REDIS_URL
+from api.database import get_redis  # Usa a conexão correta do Redis
 from api.exceptions import ErrorResponse
-
-# Configuração da aplicação FastAPI
-app = FastAPI()
 
 # Configuração de logs detalhados
 logging.basicConfig(level=logging.INFO)
@@ -22,6 +20,26 @@ logger.info("Iniciando a API...")
 # Configuração de CORS para segurança
 origins = ["https://meuapp.railway.app"]
 
+# Novo sistema de ciclo de vida da aplicação (lifespan)
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Gerencia o ciclo de vida do aplicativo FastAPI"""
+    logger.info("Inicializando recursos da API...")
+    
+    redis = await get_redis()  # Obtém a conexão corretamente
+    await FastAPILimiter.init(redis)
+    logger.info("Redis e Rate Limiter inicializados.")
+
+    yield  # Permite que a API funcione
+
+    # Finalização dos recursos
+    if redis:
+        await redis.close()
+        logger.info("Conexão com o Redis fechada.")
+
+# Configuração da aplicação FastAPI
+app = FastAPI(lifespan=lifespan)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -29,24 +47,6 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PUT", "DELETE"],
     allow_headers=["Authorization", "Content-Type"],
 )
-
-# Inicializa o Redis e o Rate Limiter
-@app.on_event("startup")
-async def startup():
-    """Inicializa a conexão com o Redis e configura o Rate Limiter, apenas uma vez."""
-    global redis_client
-    if not hasattr(app.state, "redis_initialized"):  # Verifica se já foi inicializado
-        redis_client = redis.Redis.from_url(REDIS_URL, decode_responses=True)
-        await FastAPILimiter.init(redis_client)
-        app.state.redis_initialized = True  # Marca como inicializado
-        logger.info("Redis e Rate Limiter inicializados.")
-
-@app.on_event("shutdown")
-async def shutdown():
-    """Fecha a conexão com o Redis no encerramento do app."""
-    if redis_client:
-        await redis_client.close()
-        logger.info("Conexão com o Redis fechada.")
 
 # Middleware para forçar HTTPS
 @app.middleware("http")
@@ -63,7 +63,7 @@ async def http_exception_handler(request, exc):
     logger.error(f"Erro HTTP {exc.status_code}: {exc.detail}")
     return JSONResponse(
         status_code=exc.status_code,
-        content=ErrorResponse(detail=exc.detail, code=exc.status_code).dict()
+        content=ErrorResponse(detail=exc.detail, code=exc.status_code).model_dump()  # 🔥 Corrigido `.dict()`
     )
 
 # Tratamento global para exceções inesperadas
@@ -73,7 +73,7 @@ async def generic_exception_handler(request: Request, exc: Exception):
     logger.exception(f"Erro inesperado: {str(exc)}")
     return JSONResponse(
         status_code=500,
-        content=ErrorResponse(detail="Erro interno do servidor", code=500).dict()
+        content=ErrorResponse(detail="Erro interno do servidor", code=500).model_dump()  # 🔥 Corrigido `.dict()`
     )
 
 # Inclui as rotas de autenticação
