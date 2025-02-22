@@ -11,4 +11,5 @@ fastapi-limiter==0.1.5
 redis==4.5.5
 gunicorn
 authlib
-httpxaioredis
+httpx
+aioredis
