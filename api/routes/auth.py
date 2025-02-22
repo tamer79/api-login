@@ -1,14 +1,13 @@
 from fastapi import APIRouter, Depends, Request, HTTPException
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
-from api.database import get_db
+from api.database import get_db, get_redis  # Substituí redis_client por get_redis
 from api.oauth import oauth
 from api.models import User
 from api.security import create_access_token, verify_password
 from api.exceptions import ErrorResponse
 import logging
 from api.security import verify_token
-from api.database import redis_client
 
 router = APIRouter()
 
@@ -130,10 +129,14 @@ BLACKLIST_PREFIX = "blacklist:"
 async def logout(token: dict = Depends(verify_token)):
     """Invalida um token JWT ao adicioná-lo à blacklist no Redis."""
     try:
+        # Obtém uma conexão segura com o Redis
+        redis = await get_redis()
+
         # Obtém o tempo restante de expiração do token
         expire_time = token["exp"] - token["iat"]
+
         # Adiciona o token à blacklist no Redis com tempo de expiração igual ao JWT
-        await redis_client.setex(f"{BLACKLIST_PREFIX}{token['jti']}", expire_time, "revoked")
+        await redis.setex(f"{BLACKLIST_PREFIX}{token['jti']}", expire_time, "revoked")
 
         return {"message": "Logout realizado com sucesso"}
     except Exception:
@@ -144,4 +147,5 @@ async def logout(token: dict = Depends(verify_token)):
 # -------------------------------
 async def is_token_revoked(token_jti: str):
     """Verifica no Redis se um token foi revogado."""
-    return await redis_client.exists(f"{BLACKLIST_PREFIX}{token_jti}") > 0
+    redis = await get_redis()
+    return await redis.exists(f"{BLACKLIST_PREFIX}{token_jti}") > 0

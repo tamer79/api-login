@@ -2,8 +2,8 @@ from passlib.context import CryptContext
 from datetime import datetime, timedelta, timezone
 from jose import JWTError, jwt
 from api.config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_DAYS
-from api.database import redis_client
-from api.routes.auth import is_token_revoked  # Importação correta e agora utilizada
+from api.database import get_redis  # Substituí redis_client por get_redis
+from api.routes.auth import is_token_revoked  # Importação correta e utilizada
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -27,6 +27,9 @@ async def decode_token(token: str):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         token_jti = payload.get("jti")  # Obtém o identificador do token
+
+        # Obtém uma conexão segura com o Redis
+        redis = await get_redis()
 
         # Agora usamos a função is_token_revoked() corretamente
         if await is_token_revoked(token_jti):
