@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 from jose import JWTError, jwt
 from api.config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_DAYS
 from api.database import redis_client
-from api.routes.auth import is_token_revoked  # Importação mantida e agora utilizada
+from api.routes.auth import is_token_revoked  # Importação correta e agora utilizada
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
