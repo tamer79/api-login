@@ -5,12 +5,22 @@ from redis.asyncio import Redis
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.responses import JSONResponse
 import logging
-
+import sys
+import os
 from api.routes import auth
 from api.config import REDIS_URL
 from api.exceptions import ErrorResponse
+import logging
+
+# Configuração de logs detalhados
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+logger.info("Iniciando a API...")
+
 
 app = FastAPI()
+
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 # Configuração do Logger
 logging.basicConfig(level=logging.INFO)
