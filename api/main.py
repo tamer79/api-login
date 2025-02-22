@@ -1,7 +1,7 @@
 import os
 import sys
 import logging
-import aioredis
+import redis.asyncio as redis
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_limiter import FastAPILimiter
@@ -34,10 +34,17 @@ app.add_middleware(
 @app.on_event("startup")
 async def startup():
     """Inicializa a conexão com o Redis e configura o Rate Limiter."""
-    global redis
-    redis = await aioredis.from_url(REDIS_URL, decode_responses=True)  # Conexão assíncrona
-    await FastAPILimiter.init(redis)  # Inicializa o FastAPILimiter com Redis assíncrono
+    global redis_client
+    redis_client = redis.Redis.from_url(REDIS_URL, decode_responses=True)  # Usando Redis corretamente
+    await FastAPILimiter.init(redis_client)  # Inicializa o FastAPILimiter com Redis assíncrono
     logger.info("Redis e Rate Limiter inicializados.")
+
+@app.on_event("shutdown")
+async def shutdown():
+    """Fecha a conexão com o Redis no encerramento do app."""
+    if redis_client:
+        await redis_client.close()
+        logger.info("Conexão com o Redis fechada.")
 
 # Middleware para forçar HTTPS
 @app.middleware("http")
