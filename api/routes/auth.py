@@ -7,6 +7,8 @@ from api.models import User
 from api.security import create_access_token, verify_password
 from api.exceptions import ErrorResponse
 import logging
+from api.security import verify_token
+from api.database import redis_client
 
 router = APIRouter()
 
@@ -118,3 +120,28 @@ async def auth_github_callback(request: Request, db: Session = Depends(get_db)):
     except Exception as e:
         logger.error(f"Erro ao autenticar com GitHub: {e}")
         raise HTTPException(status_code=500, detail="Erro ao processar login com GitHub")
+
+# -------------------------------
+# 🔥 NOVA IMPLEMENTAÇÃO DO LOGOUT
+# -------------------------------
+BLACKLIST_PREFIX = "blacklist:"
+
+@router.post("/logout")
+async def logout(token: dict = Depends(verify_token)):
+    """Invalida um token JWT ao adicioná-lo à blacklist no Redis."""
+    try:
+        # Obtém o tempo restante de expiração do token
+        expire_time = token["exp"] - token["iat"]
+        # Adiciona o token à blacklist no Redis com tempo de expiração igual ao JWT
+        await redis_client.setex(f"{BLACKLIST_PREFIX}{token['jti']}", expire_time, "revoked")
+
+        return {"message": "Logout realizado com sucesso"}
+    except Exception:
+        raise HTTPException(status_code=401, detail="Erro ao realizar logout")
+
+# -------------------------------
+# Função para verificar se um token está na blacklist
+# -------------------------------
+async def is_token_revoked(token_jti: str):
+    """Verifica no Redis se um token foi revogado."""
+    return await redis_client.exists(f"{BLACKLIST_PREFIX}{token_jti}") > 0
