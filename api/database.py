@@ -1,6 +1,6 @@
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, Session
 import redis.asyncio as redis  # ✅ Usando redis-py em modo assíncrono
 from api.config import REDIS_URL
 import os
@@ -47,3 +47,10 @@ async def get_redis():
             redis_client = None  # Se a conexão falhar, impede erro na aplicação
 
     return redis_client
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()

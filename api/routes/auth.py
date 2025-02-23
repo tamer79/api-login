@@ -7,6 +7,7 @@ from api.models import User
 from api.security import create_access_token, verify_password, verify_token
 import logging
 
+
 router = APIRouter()
 
 # Configuração do Logger
