@@ -1,9 +1,8 @@
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-import redis
+import redis.asyncio as redis  # ✅ Usando redis-py em modo assíncrono
 from api.config import REDIS_URL
-import aioredis
 import os
 import logging
 
@@ -34,7 +33,6 @@ def test_db_connection():
 test_db_connection()
 
 # Configuração do Redis
-REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
 redis_client = None  # Variável global para conexão com Redis
 
 async def get_redis():
@@ -42,13 +40,10 @@ async def get_redis():
     global redis_client
     if redis_client is None:
         try:
-            redis_client = await aioredis.from_url(REDIS_URL, decode_responses=True)
+            redis_client = redis.from_url(REDIS_URL, decode_responses=True)
             logger.info("✅ Conectado ao Redis com sucesso!")
         except Exception as e:
             logger.error(f"❌ Erro ao conectar ao Redis: {e}")
             redis_client = None  # Se a conexão falhar, impede erro na aplicação
 
     return redis_client
-
-def get_redis():
-    return redis.from_url(REDIS_URL, decode_responses=True)

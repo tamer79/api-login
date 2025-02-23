@@ -13,4 +13,4 @@ gunicorn
 authlib
 httpx
 setuptools
-aioredis==2.0.1
+redis
