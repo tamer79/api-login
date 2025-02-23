@@ -52,8 +52,16 @@ app.add_middleware(
 @app.middleware("http")
 async def force_https(request: Request, call_next):
     """Garante que a API só seja acessada via HTTPS em produção."""
-    if request.url.scheme != "https" and "railway.app" in request.url.hostname:
+    forwarded_proto = request.headers.get("X-Forwarded-Proto", "").lower()
+    
+    # Se a requisição veio como HTTPS ou foi redirecionada corretamente, permita
+    if request.url.scheme == "https" or forwarded_proto == "https":
+        return await call_next(request)
+
+    # Bloqueia requisições HTTP na produção
+    if "railway.app" in request.url.hostname:
         return JSONResponse(status_code=403, content={"message": "Use HTTPS para acessar esta API."})
+
     return await call_next(request)
 
 # Tratamento padronizado de erros HTTP
