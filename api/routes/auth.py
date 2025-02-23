@@ -16,15 +16,17 @@ logger = logging.getLogger(__name__)
 async def login(request: Request, db: Session = Depends(get_db)):
     """Processa login e retorna token de acesso."""
     data = await request.json()
-    email = data.get("email")
+    login_input = data.get("email") or data.get("username")  # Aceita email ou username
     password = data.get("password")
 
-    logger.info(f"Tentativa de login para {email}")
+    logger.info(f"Tentativa de login para {login_input}")
 
-    user = db.query(User).filter(User.email == email).first()
-    
+    user = db.query(User).filter(
+        (User.email == login_input) | (User.username == login_input)  # Verifica email ou username
+    ).first()
+
     if not user or not verify_password(password, user.hashed_password):
-        logger.warning(f"Falha de login para {email}")
+        logger.warning(f"Falha de login para {login_input}")
         raise HTTPException(
             status_code=401,
             detail="Credenciais inválidas",
@@ -32,8 +34,8 @@ async def login(request: Request, db: Session = Depends(get_db)):
         )
 
     access_token = create_access_token(data={"sub": user.email})
-    logger.info(f"Login bem-sucedido para {email}")
-    
+    logger.info(f"Login bem-sucedido para {login_input}")
+
     return {"access_token": access_token}
 
 @router.get("/login/google")
