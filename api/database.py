@@ -1,34 +1,27 @@
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.pool import QueuePool
-from api.config import DATABASE_URL, REDIS_URL
-import redis.asyncio as redis  # 🚀 Substituí aioredis por redis.asyncio
+import os
 
-engine = create_engine(DATABASE_URL, poolclass=QueuePool, pool_size=10, max_overflow=20)
+# Configuração do banco de dados
+DATABASE_URL = "postgresql://postgres:ZkwJXjxSeeRbgewdfgilpMmxXKUDpBDD@postgres.railway.internal:5432/lili"
+
+# Criar o motor de conexão
+engine = create_engine(DATABASE_URL, pool_pre_ping=True)
+
+# Criar a sessão
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
+# Base para os modelos
 Base = declarative_base()
 
-def get_db():
-    db = SessionLocal()
+# Testar conexão com o banco de dados
+def test_db_connection():
     try:
-        yield db
-    finally:
-        db.close()
+        with engine.connect() as conn:
+            print("✅ Conectado ao banco de dados com sucesso!")
+    except Exception as e:
+        print(f"❌ Erro ao conectar ao banco de dados: {e}")
 
-# -------------------------------
-# 🔥 NOVA IMPLEMENTAÇÃO DO REDIS USANDO redis.asyncio
-# -------------------------------
-redis_client = None  # Variável global para armazenar a conexão Redis
-
-async def init_redis():
-    """Inicializa e retorna a conexão com o Redis usando redis.asyncio."""
-    return redis.from_url(REDIS_URL, decode_responses=True)
-
-async def get_redis():
-    """Obtém a conexão com o Redis, inicializando se necessário."""
-    global redis_client
-    if redis_client is None:
-        redis_client = await init_redis()
-    return redis_client
+# Executar teste de conexão
+test_db_connection()
