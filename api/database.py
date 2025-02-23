@@ -1,6 +1,8 @@
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+import redis
+from api.config import REDIS_URL
 import aioredis
 import os
 import logging
@@ -47,3 +49,6 @@ async def get_redis():
             redis_client = None  # Se a conexão falhar, impede erro na aplicação
 
     return redis_client
+
+def get_redis():
+    return redis.from_url(REDIS_URL, decode_responses=True)
