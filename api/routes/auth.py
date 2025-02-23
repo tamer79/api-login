@@ -15,28 +15,46 @@ logger = logging.getLogger(__name__)
 @router.post("/login")
 async def login(request: Request, db: Session = Depends(get_db)):
     """Processa login e retorna token de acesso."""
-    data = await request.json()
-    login_input = data.get("email") or data.get("username")  # Aceita email ou username
-    password = data.get("password")
+    try:
+        # Verifica se a requisição contém JSON válido
+        data = await request.json()
+        if not data:
+            logger.error("Requisição sem corpo JSON.")
+            raise HTTPException(status_code=400, detail="O corpo da requisição está vazio.")
 
-    logger.info(f"Tentativa de login para {login_input}")
+        login_input = data.get("email") or data.get("username")  # Aceita email ou username
+        password = data.get("password")
 
-    user = db.query(User).filter(
-        (User.email == login_input) | (User.username == login_input)  # Verifica email ou username
-    ).first()
+        if not login_input or not password:
+            logger.error("Campos obrigatórios ausentes na requisição.")
+            raise HTTPException(status_code=400, detail="Email/username e senha são obrigatórios.")
 
-    if not user or not verify_password(password, user.hashed_password):
-        logger.warning(f"Falha de login para {login_input}")
-        raise HTTPException(
-            status_code=401,
-            detail="Credenciais inválidas",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+        logger.info(f"Tentativa de login para {login_input}")
 
-    access_token = create_access_token(data={"sub": user.email})
-    logger.info(f"Login bem-sucedido para {login_input}")
+        # Busca usuário por email ou username
+        user = db.query(User).filter(
+            (User.email == login_input) | (User.username == login_input)
+        ).first()
 
-    return {"access_token": access_token}
+        if not user:
+            logger.warning(f"Usuário {login_input} não encontrado.")
+            raise HTTPException(status_code=401, detail="Credenciais inválidas")
+
+        if not verify_password(password, user.hashed_password):
+            logger.warning(f"Senha incorreta para {login_input}")
+            raise HTTPException(status_code=401, detail="Credenciais inválidas")
+
+        # Gera token de acesso
+        access_token = create_access_token(data={"sub": user.email})
+        logger.info(f"Login bem-sucedido para {login_input}")
+
+        return {"access_token": access_token}
+
+    except HTTPException as e:
+        raise e  # Repassa exceções HTTP controladas
+    except Exception as e:
+        logger.error(f"Erro inesperado no login: {e}")
+        raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 @router.get("/login/google")
 async def login_google(request: Request):
