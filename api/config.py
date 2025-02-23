@@ -12,7 +12,7 @@ def get_env_variable(var_name: str, default=None, required=True):
     return value
 
 # 🔒 Segurança
-SECRET_KEY = get_env_variable("SECRET_KEY", "changeme")
+SECRET_KEY = get_env_variable("SECRET_KEY", "uma-chave-secreta")
 ALGORITHM = get_env_variable("ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(get_env_variable("ACCESS_TOKEN_EXPIRE_MINUTES", 30))
 REFRESH_TOKEN_EXPIRE_DAYS = int(get_env_variable("REFRESH_TOKEN_EXPIRE_DAYS", 7))
