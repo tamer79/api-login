@@ -18,8 +18,8 @@ ACCESS_TOKEN_EXPIRE_MINUTES = int(get_env_variable("ACCESS_TOKEN_EXPIRE_MINUTES"
 REFRESH_TOKEN_EXPIRE_DAYS = int(get_env_variable("REFRESH_TOKEN_EXPIRE_DAYS", 7))
 
 # 🔗 Conexões Externas
-DATABASE_URL = get_env_variable("DATABASE_URL", required=True)  # 🔹 Agora é obrigatório
-REDIS_URL = get_env_variable("REDIS_URL", "redis://default:redispw@redis.railway.internal:6379")
+DATABASE_URL = "postgresql+psycopg2://login:e2evfMBeP@/login?host=/cloudsql/ultimate-choir-451811-g2:us-central1:login"  # 🔹 Agora é obrigatório
+REDIS_URL = get_env_variable("REDIS_URL", "redis://10.102.149.123:6379")
 
 # 🔑 Credenciais OAuth
 GOOGLE_CLIENT_ID = get_env_variable("GOOGLE_CLIENT_ID", "seu-google-client-id")

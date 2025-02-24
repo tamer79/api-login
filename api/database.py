@@ -1,18 +1,18 @@
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
-import redis.asyncio as redis  # ✅ Usando redis-py em modo assíncrono
-from api.config import REDIS_URL
+from sqlalchemy.orm import sessionmaker
+import redis.asyncio as aioredis  # ✅ Usando redis-py em modo assíncrono
 import os
 import logging
 
 # Configuração do Logger
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Configuração do banco de dados
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:ZkwJXjxSeeRbgewdfgilpMmxXKUDpBDD@postgres.railway.internal:5432/lili")
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+psycopg2://login:e2evfMBeP@/login?host=/cloudsql/ultimate-choir-451811-g2:us-central1:login")
 
-# Criar o motor de conexão com PostgreSQL
+# Criar o motor de conexão com PostgreSQL via Cloud SQL Auth Proxy
 engine = create_engine(DATABASE_URL, pool_pre_ping=True)
 
 # Criar a sessão
@@ -40,7 +40,7 @@ async def get_redis():
     global redis_client
     if redis_client is None:
         try:
-            redis_client = redis.from_url(REDIS_URL, decode_responses=True)
+            redis_client = await aioredis.from_url("redis://10.102.149.123:6379", decode_responses=True)
             logger.info("✅ Conectado ao Redis com sucesso!")
         except Exception as e:
             logger.error(f"❌ Erro ao conectar ao Redis: {e}")
@@ -49,6 +49,7 @@ async def get_redis():
     return redis_client
 
 def get_db():
+    """Obtém uma sessão do banco de dados."""
     db = SessionLocal()
     try:
         yield db

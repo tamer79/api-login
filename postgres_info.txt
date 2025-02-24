@@ -1,0 +1,28 @@
+Dados do Repositório no GitHub:
+    Link do Repositório: https://github.com/tamer79/api-login.git
+
+
+Banco de Dados Postgres:
+	ID da instância: api-login
+	senha: e2evfMBeP
+	zona: europe-north1 (Finlândia)
+	IP Particular: ativado (API Service Networking ativada)
+	IP Público: ativado (exige uso do Cloud SQL Proxy)
+	Caminho privado: ativado (Permite que outros serviços do Google Cloud, como o BigQuery, tenham acesso a dados e façam consultas por IP particular)
+	Integração com Vertex AI: ativado
+    Conta de Serviço: p448340430199-52zisy@gcp-sa-cloud-sql.iam.gserviceaccount.com
+
+    Como conectar à instância:
+        Nome da Conexão: api-login-451907:europe-north1:api-login
+        Conectividade de IP Particular: Ativado
+            Acesso a serviços particulares (PSA): Ativado
+                Rede Associada: projects/api-login-451907/global/networks/default
+                Rede VPC: default
+                    Intervalo de IP alocado: automático
+                    Endereço IP interno: 10.76.176.3
+        Conectividade de IP Público: ativado
+            Endereço de IP Público: 34.88.45.48
+            Endereço de IP de Saída: 34.88.155.239
+        Número de porta padrão do banco de dados TCP: 5432
+
+    Nome do Banco de Dados: login

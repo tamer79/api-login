@@ -1,5 +1,4 @@
 import os
-import sys
 import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
@@ -8,17 +7,17 @@ from fastapi_limiter import FastAPILimiter
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.responses import JSONResponse
 from api.routes import auth
-from api.config import REDIS_URL
-from api.database import get_redis  # Usa a conexão correta do Redis
+from api.config import DATABASE_URL  # Atualizado para usar Cloud SQL
+from api.database import get_redis  # Obtém a conexão correta do Redis
 from api.exceptions import ErrorResponse
 
 # Configuração de logs detalhados
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-logger.info("Iniciando a API...")
+logger.info("Iniciando a API na Google Cloud...")
 
-# Configuração de CORS para segurança
-origins = ["https://meuapp.railway.app"]
+# Configuração de CORS (substitua pelo domínio correto)
+origins = ["https://seuapp.com", "http://localhost:3000"]  # 🔥 Ajuste para seu frontend
 
 # Novo sistema de ciclo de vida da aplicação (lifespan)
 @asynccontextmanager
@@ -26,7 +25,8 @@ async def lifespan(app: FastAPI):
     """Gerencia o ciclo de vida do aplicativo FastAPI"""
     logger.info("Inicializando recursos da API...")
     
-    redis = await get_redis()  # Obtém a conexão corretamente
+    # Conexão com Redis no Google Memorystore
+    redis = await get_redis()  # 🔥 Corrigido para funcionar corretamente
     await FastAPILimiter.init(redis)
     logger.info("Redis e Rate Limiter inicializados.")
 
@@ -48,18 +48,17 @@ app.add_middleware(
     allow_headers=["Authorization", "Content-Type"],
 )
 
-# Middleware para forçar HTTPS
+# Middleware para forçar HTTPS na produção
 @app.middleware("http")
 async def force_https(request: Request, call_next):
-    """Garante que a API só seja acessada via HTTPS em produção."""
+    """Garante que a API só seja acessada via HTTPS na produção (GCP)."""
     forwarded_proto = request.headers.get("X-Forwarded-Proto", "").lower()
-    
-    # Se a requisição veio como HTTPS ou foi redirecionada corretamente, permita
+
     if request.url.scheme == "https" or forwarded_proto == "https":
         return await call_next(request)
 
     # Bloqueia requisições HTTP na produção
-    if "railway.app" in request.url.hostname:
+    if "appspot.com" in request.url.hostname:  # 🔥 Atualizado para GCP
         return JSONResponse(status_code=403, content={"message": "Use HTTPS para acessar esta API."})
 
     return await call_next(request)
@@ -71,7 +70,7 @@ async def http_exception_handler(request, exc):
     logger.error(f"Erro HTTP {exc.status_code}: {exc.detail}")
     return JSONResponse(
         status_code=exc.status_code,
-        content=ErrorResponse(detail=exc.detail, code=exc.status_code).model_dump()  # 🔥 Corrigido `.dict()`
+        content=ErrorResponse(detail=exc.detail, code=exc.status_code).model_dump()
     )
 
 # Tratamento global para exceções inesperadas
@@ -81,7 +80,7 @@ async def generic_exception_handler(request: Request, exc: Exception):
     logger.exception(f"Erro inesperado: {str(exc)}")
     return JSONResponse(
         status_code=500,
-        content=ErrorResponse(detail="Erro interno do servidor", code=500).model_dump()  # 🔥 Corrigido `.dict()`
+        content=ErrorResponse(detail="Erro interno do servidor", code=500).model_dump()
     )
 
 # Inclui as rotas de autenticação
@@ -90,4 +89,8 @@ app.include_router(auth.router, prefix="/auth", tags=["Autenticação"])
 # Rota raiz para testes
 @app.get("/")
 def read_root():
-    return {"message": "API funcionando na Railway!"}
+    return {"message": "API funcionando na Google Cloud!"}  # 🔥 Mensagem atualizada
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8080)

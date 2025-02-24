@@ -1,13 +1,14 @@
-fastapi==0.115.8
-uvicorn==0.34.0
+fastapi
+uvicorn
 SQLAlchemy==2.0.38
 psycopg2-binary==2.9.10
+psycopg2
 python-jose==3.3.0
 passlib==1.7.4
 bcrypt==3.2.0
 python-dotenv==1.0.1
 alembic==1.12.1
-fastapi-limiter==0.1.5
+fastapi-limiter
 redis==4.5.5
 gunicorn
 authlib
