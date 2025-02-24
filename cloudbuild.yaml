@@ -1,0 +1,12 @@
+steps:
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'gcr.io/api-login-451907/api-login', '.']
+
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'gcr.io/api-login-451907/api-login']
+
+- name: 'gcr.io/cloud-builders/gcloud'
+  args: ['run', 'deploy', 'api-login', '--image', 'gcr.io/api-login-451907/api-login', '--platform', 'managed', '--region', 'europe-north1', '--allow-unauthenticated']
+
+images:
+- 'gcr.io/api-login-451907/api-login'
