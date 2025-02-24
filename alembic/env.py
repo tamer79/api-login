@@ -39,7 +39,8 @@ def run_migrations_offline() -> None:
     script output.
 
     """
-    url = config.get_main_option("sqlalchemy.url")
+    url = config.set_main_option("sqlalchemy.url", "postgresql://postgres:e2evfMBeP@34.88.45.48:5432/login")
+
     context.configure(
         url=url,
         target_metadata=target_metadata,

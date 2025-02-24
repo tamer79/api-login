@@ -1,6 +1,10 @@
 Dados do Repositório no GitHub:
     Link do Repositório: https://github.com/tamer79/api-login.git
 
+Projeto:
+    nome: api-login
+    ID: api-login-451907
+
 
 Banco de Dados Postgres:
 	ID da instância: api-login
@@ -26,3 +30,14 @@ Banco de Dados Postgres:
         Número de porta padrão do banco de dados TCP: 5432
 
     Nome do Banco de Dados: login
+
+Redis
+    ID de Instância: api-login-redis
+    Capacidade: 1 Gb
+    Zona: europe-north1 (Finlândia)
+    Rede: Default
+    Modo de Conexões: Acesso a Servidores particulares
+    Versão: 7.0 (recomendada pela Google Clouds)
+    Endpoint Principal: 10.76.177.3:6379
+    Rede autorizada: default (api-login-451907)
+    Intervalo de IP: 10.76.177.0/29

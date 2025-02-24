@@ -10,7 +10,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Configuração do banco de dados
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+psycopg2://login:e2evfMBeP@/login?host=/cloudsql/ultimate-choir-451811-g2:us-central1:login")
+DATABASE_URL = "postgresql://postgres:e2evfMBeP@34.88.45.48:5432/login"
 
 # Criar o motor de conexão com PostgreSQL via Cloud SQL Auth Proxy
 engine = create_engine(DATABASE_URL, pool_pre_ping=True)
@@ -40,7 +40,7 @@ async def get_redis():
     global redis_client
     if redis_client is None:
         try:
-            redis_client = await aioredis.from_url("redis://10.102.149.123:6379", decode_responses=True)
+            redis_client = await aioredis.from_url("redis://10.76.177.3:6379", decode_responses=True)
             logger.info("✅ Conectado ao Redis com sucesso!")
         except Exception as e:
             logger.error(f"❌ Erro ao conectar ao Redis: {e}")
